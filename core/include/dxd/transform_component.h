@@ -31,6 +31,7 @@ namespace dxd
 		DirectX::XMFLOAT3 GetPosition() const;
 		DirectX::XMFLOAT4 GetRotation() const; 
 		DirectX::XMFLOAT3 GetScale() const;
+
 		DirectX::XMMATRIX GetWorldMatrix() const;
 
 	private:

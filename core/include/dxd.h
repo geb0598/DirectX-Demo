@@ -9,3 +9,6 @@
 #include "dxd/component.h"
 #include "dxd/mesh_renderer_component.h"
 #include "dxd/transform_component.h"
+#include "dxd/camera_component.h"
+
+#include "dxd/mesh_loader.h"

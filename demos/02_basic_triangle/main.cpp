@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     auto shader = std::make_shared<dxd::UShader>(Device, shaderdesc);
 
-    std::vector<dxd::Vertex> vertices(3);
+    std::vector<dxd::FVertex> vertices(3);
     vertices[0].Position = { -0.5, -0.5, 0 };
     vertices[1].Position = { 0.5, -0.5, 0 };
     vertices[2].Position = { 0,    0.5, 0 };

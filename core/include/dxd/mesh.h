@@ -27,7 +27,7 @@ namespace dxd
 		UMesh& operator=(const UMesh&) = delete;
 		UMesh& operator=(UMesh&&) noexcept = default;
 
-		UMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices);
+		UMesh(ID3D11Device* Device, const std::vector<FVertex>& Vertices, const std::vector<UINT>& Indices);
 
 		void Bind(ID3D11DeviceContext* DeviceContext);
 
@@ -36,7 +36,7 @@ namespace dxd
 		UINT GetStride() const;
 
 	private:
-		void CreateMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices);
+		void CreateMesh(ID3D11Device* Device, const std::vector<FVertex>& Vertices, const std::vector<UINT>& Indices);
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;

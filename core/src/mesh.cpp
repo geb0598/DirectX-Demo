@@ -3,8 +3,8 @@
 namespace dxd
 {
 
-	UMesh::UMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices)
-		: VertexCount(Vertices.size()), IndexCount(Indices.size()), Stride(sizeof(Vertex))
+	UMesh::UMesh(ID3D11Device* Device, const std::vector<FVertex>& Vertices, const std::vector<UINT>& Indices)
+		: VertexCount(Vertices.size()), IndexCount(Indices.size()), Stride(sizeof(FVertex))
 	{
 		CreateMesh(Device, Vertices, Indices);
 	}
@@ -34,7 +34,7 @@ namespace dxd
 		return Stride;
 	}
 
-	void UMesh::CreateMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices)
+	void UMesh::CreateMesh(ID3D11Device* Device, const std::vector<FVertex>& Vertices, const std::vector<UINT>& Indices)
 	{
 		D3D11_BUFFER_DESC VertexBufferDesc = {};
 		VertexBufferDesc.ByteWidth = static_cast<UINT>(VertexCount * Stride);
