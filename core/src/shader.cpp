@@ -26,7 +26,7 @@ namespace dxd
 		deviceContext->VSSetConstantBuffers(0, 1, vsConstantBuffer.GetAddressOf());
 
 		deviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
-		deviceContext->PSSetConstantBuffers(0, 1, psConstantBuffer.GetAddressOf());
+		deviceContext->PSSetConstantBuffers(1, 1, psConstantBuffer.GetAddressOf());
 	}
 
 	void UShader::CreateShader(ID3D11Device* device, const std::filesystem::path& vsFilePath, const std::filesystem::path& psFilePath,

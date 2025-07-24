@@ -12,7 +12,7 @@ namespace dxd
 	public:
 		~UWindow();
 
-		UWindow(int width, int height, const std::wstring& name);
+		UWindow(int Width, int Height, const std::wstring& WindowName);
 
 		UWindow(const UWindow&) = delete;
 		UWindow(UWindow&&) noexcept = default;
@@ -20,7 +20,7 @@ namespace dxd
 		UWindow& operator=(const UWindow&) = delete;
 		UWindow& operator=(UWindow&&) noexcept = default;
 
-		HWND GetHWND();
+		HWND GetHWindow();
 
 	private:
 		class UWindowClass
@@ -46,11 +46,11 @@ namespace dxd
 			HINSTANCE hInstance;
 		};
 
-		static LRESULT CALLBACK WndProcSetup(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-		static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-		LRESULT WndProcImpl(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam); // TODO: CALLBACK specifier required?
+		static LRESULT CALLBACK WndProcSetup(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WndProc(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
+		LRESULT WndProcImpl(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam); // TODO: CALLBACK specifier required?
 
-		HWND hWnd;
+		HWND HWindow;
 	};
 
 } // namespace dxd

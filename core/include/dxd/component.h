@@ -3,14 +3,14 @@
 namespace dxd
 {
 
-	class UObject;
+	class UGameObject;
 
 	class IComponent
 	{
 	public:
 		virtual ~IComponent() = default;
 
-		virtual UObject* GetObject() const = 0;
+		virtual UGameObject* GetGameObject() const = 0;
 	};
 
 	class UComponentImpl : public IComponent
@@ -18,12 +18,18 @@ namespace dxd
 	public:
 		virtual ~UComponentImpl() = default;
 
-		explicit UComponentImpl(UObject* Object);
+		UComponentImpl(const UComponentImpl&) = delete;
+		UComponentImpl(UComponentImpl&&) noexcept = default;
 
-		virtual UObject* GetObject() const override;
+		UComponentImpl& operator=(const UComponentImpl&) = delete;
+		UComponentImpl& operator=(UComponentImpl&&) noexcept = default;
+
+		explicit UComponentImpl(UGameObject* GameObject);
+
+		virtual UGameObject* GetGameObject() const override;
 
 	private:
-		UObject* Object;
+		UGameObject* GameObject;
 	};
 
 } // namespace dxd

@@ -1,0 +1,3 @@
+ADD_SUBDIRECTORY(01_basic_window)
+ADD_SUBDIRECTORY(02_basic_triangle)
+ADD_SUBDIRECTORY(03_multiple_triangles)

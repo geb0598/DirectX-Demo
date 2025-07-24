@@ -15,7 +15,7 @@ namespace dxd
 	class URenderer
 	{
 	public:
-		static URenderer& GetInstance();
+		static URenderer& GetInstance(HWND HWindow);
 
 		~URenderer();
 
@@ -24,11 +24,6 @@ namespace dxd
 		URenderer& operator=(const URenderer&) = delete;
 		URenderer& operator=(URenderer&&) = delete;
 
-		void Create(HWND hWindow);
-		void CreateDeviceAndSwapChain(HWND hWindow);
-		void CreateFrameBuffer();
-		void CreateRasterizerState();
-
 		void Prepare();
 		void Render();
 
@@ -36,7 +31,12 @@ namespace dxd
 		ID3D11DeviceContext* GetDeviceContext();
 
 	private:
-		URenderer() = default;
+		URenderer(HWND HWindow);
+
+		void Create(HWND HWindow);
+		void CreateDeviceAndSwapChain(HWND HWindow);
+		void CreateFrameBuffer();
+		void CreateRasterizerState();
 
 		Microsoft::WRL::ComPtr<ID3D11Device> Device = nullptr;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext = nullptr;

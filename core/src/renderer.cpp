@@ -3,10 +3,11 @@
 namespace dxd
 {
 
-	URenderer& URenderer::GetInstance()
+	URenderer& URenderer::GetInstance(HWND HWindow)
 	{
-		static URenderer renderer;
-		return renderer;
+		// NOTE: Renderer is initialized once per execution as a singleton
+		static URenderer Renderer(HWindow);
+		return Renderer;
 	}
 
 	URenderer::~URenderer()
@@ -15,61 +16,6 @@ namespace dxd
 		{
 			DeviceContext->Flush();
 		}
-	}
-
-	void URenderer::Create(HWND hWindow)
-	{
-		// TODO: throw exception when renderer is already created
-		CreateDeviceAndSwapChain(hWindow);
-
-		CreateFrameBuffer();
-
-		CreateRasterizerState();
-	}
-
-	void URenderer::CreateDeviceAndSwapChain(HWND hWindow)
-	{
-		D3D_FEATURE_LEVEL featurelevels[] = { D3D_FEATURE_LEVEL_11_0 };
-		DXGI_SWAP_CHAIN_DESC swapchaindesc = {};
-		swapchaindesc.BufferDesc.Width = 0;
-		swapchaindesc.BufferDesc.Height = 0;
-		swapchaindesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-		swapchaindesc.SampleDesc.Count = 1;
-		swapchaindesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapchaindesc.BufferCount = 2;
-		swapchaindesc.OutputWindow = hWindow;
-		swapchaindesc.Windowed = TRUE;
-		swapchaindesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
-		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
-			D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_DEBUG,
-			featurelevels, ARRAYSIZE(featurelevels), D3D11_SDK_VERSION,
-			&swapchaindesc, &SwapChain, &Device, nullptr, &DeviceContext);
-
-		SwapChain->GetDesc(&swapchaindesc);
-
-		ViewportInfo
-			= { 0.0f, 0.0f, (float)swapchaindesc.BufferDesc.Width, (float)swapchaindesc.BufferDesc.Height, 0.0f, 1.0f };
-	}
-
-	void URenderer::CreateFrameBuffer()
-	{
-		SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)FrameBuffer.GetAddressOf());
-
-				D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
-		framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-		framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-
-		Device->CreateRenderTargetView(FrameBuffer.Get(), &framebufferRTVdesc, FrameBufferRTV.GetAddressOf());
-	}
-
-	void URenderer::CreateRasterizerState()
-	{
-		D3D11_RASTERIZER_DESC rasterizerdesc = {};
-		rasterizerdesc.FillMode = D3D11_FILL_SOLID;
-		rasterizerdesc.CullMode = D3D11_CULL_BACK;
-
-		Device->CreateRasterizerState(&rasterizerdesc, RasterizerState.GetAddressOf());
 	}
 
 	void URenderer::Prepare()
@@ -83,7 +29,7 @@ namespace dxd
 		DeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 	}
 
-		void URenderer::Render()
+	void URenderer::Render()
 	{
 		SwapChain->Present(1, 0);
 	}
@@ -96,6 +42,65 @@ namespace dxd
 	ID3D11DeviceContext* URenderer::GetDeviceContext()
 	{
 		return DeviceContext.Get();
+	}
+
+	URenderer::URenderer(HWND HWindow)
+	{
+		Create(HWindow);
+	}
+
+	void URenderer::Create(HWND HWindow)
+	{
+		CreateDeviceAndSwapChain(HWindow);
+
+		CreateFrameBuffer();
+
+		CreateRasterizerState();
+	}
+
+	void URenderer::CreateDeviceAndSwapChain(HWND HWindow)
+	{
+		D3D_FEATURE_LEVEL FeatureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+		DXGI_SWAP_CHAIN_DESC SwapChainDesc = {};
+		SwapChainDesc.BufferDesc.Width = 0;
+		SwapChainDesc.BufferDesc.Height = 0;
+		SwapChainDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		SwapChainDesc.SampleDesc.Count = 1;
+		SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		SwapChainDesc.BufferCount = 2;
+		SwapChainDesc.OutputWindow = HWindow;
+		SwapChainDesc.Windowed = TRUE;
+		SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
+			D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_DEBUG,
+			FeatureLevels, ARRAYSIZE(FeatureLevels), D3D11_SDK_VERSION,
+			&SwapChainDesc, &SwapChain, &Device, nullptr, &DeviceContext);
+
+		SwapChain->GetDesc(&SwapChainDesc);
+
+		ViewportInfo
+			= { 0.0f, 0.0f, (float)SwapChainDesc.BufferDesc.Width, (float)SwapChainDesc.BufferDesc.Height, 0.0f, 1.0f };
+	}
+
+	void URenderer::CreateFrameBuffer()
+	{
+		SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)FrameBuffer.GetAddressOf());
+
+		D3D11_RENDER_TARGET_VIEW_DESC FrameBufferRTVDesc = {};
+		FrameBufferRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+		FrameBufferRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+		Device->CreateRenderTargetView(FrameBuffer.Get(), &FrameBufferRTVDesc, FrameBufferRTV.GetAddressOf());
+	}
+
+	void URenderer::CreateRasterizerState()
+	{
+		D3D11_RASTERIZER_DESC RasterizerDesc = {};
+		RasterizerDesc.FillMode = D3D11_FILL_SOLID;
+		RasterizerDesc.CullMode = D3D11_CULL_BACK;
+
+		Device->CreateRasterizerState(&RasterizerDesc, RasterizerState.GetAddressOf());
 	}
 
 } // namespace dxdj

@@ -19,8 +19,8 @@ namespace dxd
 	struct VS_CONSTANT_BUFFER_DATA
 	{
 		DirectX::XMMATRIX World;
-		DirectX::XMMATRIX View;
-		DirectX::XMMATRIX Projection;
+		// DirectX::XMMATRIX View;
+		// DirectX::XMMATRIX Projection;
 	};
 
 	struct PS_CONSTANT_BUFFER_DATA

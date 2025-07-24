@@ -5,16 +5,23 @@
 #include <type_traits>
 
 #include "component.h"
+#include "transform_component.h"
 
 namespace dxd
 {
 
-	class UObject
+	class UGameObject
 	{
 	public:
-		~UObject() = default;
+		~UGameObject() = default;
 
-		UObject();
+		UGameObject();
+
+		UGameObject(const UGameObject&) = delete;
+		UGameObject(UGameObject&&) noexcept = default;
+
+		UGameObject& operator=(const UGameObject&) = delete;
+		UGameObject& operator=(UGameObject&&) noexcept = default;
 
 		template<typename T, typename... Args> 
 		std::enable_if_t<std::is_base_of_v<IComponent, T>>
@@ -31,9 +38,9 @@ namespace dxd
 			for (const auto& Component : Components)
 			{	// TODO: RTTI overhead
 				//       To mitigate the issue, use enum class, uid, etc.
-				if (T* component = dynamic_cast<T*>(Component.get()))
+				if (T* TargetComponent = dynamic_cast<T*>(Component.get()))
 				{
-					return component;
+					return TargetComponent;
 				}
 			}
 			return nullptr;

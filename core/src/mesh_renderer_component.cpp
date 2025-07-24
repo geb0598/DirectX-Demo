@@ -1,21 +1,40 @@
 #include "dxd/mesh_renderer_component.h"
+#include "dxd/transform_component.h"
 
 namespace dxd
 {
 
-	UMeshRendererComponent::UMeshRendererComponent(UObject* object, std::shared_ptr<UMesh> mesh, std::shared_ptr<UShader> shader)
-		: UComponentImpl(object), Mesh(mesh), Shader(shader) {}
+	UMeshRendererComponent::UMeshRendererComponent(
+		UGameObject* GameObject, std::shared_ptr<UMesh> Mesh, std::shared_ptr<UShader> Shader)
+		: UComponentImpl(GameObject), Mesh(Mesh), Shader(Shader) {}
 
-	void UMeshRendererComponent::Render(ID3D11DeviceContext* deviceContext)
+	void UMeshRendererComponent::Render(
+		ID3D11DeviceContext* DeviceContext, 
+		const VS_CONSTANT_BUFFER_DATA& VSConstantBufferData, 
+		const PS_CONSTANT_BUFFER_DATA& PSConstantBufferData)
 	{
-		// TODO: get transform info
+		// TODO: get Transform info
 		//		 update constant buffer of shader
 
-		Shader->Bind(deviceContext);
+		/*
+		auto Transform = GetGameObject()->GetComponent<UTransformComponent>();
+		if (Transform != nullptr)
+		{
+			VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
+			VSConstantBufferData.World = Transform->GetWorldMatrix();
+			Shader->UpdateVSConstants(DeviceContext, VSConstantBufferData);
+		}
+		*/
 
-		Mesh->Bind(deviceContext);
+		Shader->UpdateVSConstants(DeviceContext, VSConstantBufferData);
 
-		deviceContext->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
+		Shader->UpdatePSConstants(DeviceContext, PSConstantBufferData);
+
+		Shader->Bind(DeviceContext);
+
+		Mesh->Bind(DeviceContext);
+
+		DeviceContext->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
 	}
 
 } // namespace dxd

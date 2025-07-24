@@ -3,20 +3,20 @@
 namespace dxd
 {
 
-	UMesh::UMesh(ID3D11Device* device, const std::vector<Vertex>& vertices, const std::vector<UINT>& indices)
-		: VertexCount(vertices.size()), IndexCount(indices.size()), Stride(sizeof(Vertex))
+	UMesh::UMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices)
+		: VertexCount(Vertices.size()), IndexCount(Indices.size()), Stride(sizeof(Vertex))
 	{
-		CreateMesh(device, vertices, indices);
+		CreateMesh(Device, Vertices, Indices);
 	}
 
-	void UMesh::Bind(ID3D11DeviceContext* deviceContext)
+	void UMesh::Bind(ID3D11DeviceContext* DeviceContext)
 	{
-		UINT offset = 0;
-		deviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &Stride, &offset);
+		UINT Offset = 0;
+		DeviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &Stride, &Offset);
 
-		deviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		DeviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-		deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	UINT UMesh::GetVertexCount() const
@@ -34,31 +34,31 @@ namespace dxd
 		return Stride;
 	}
 
-	void UMesh::CreateMesh(ID3D11Device* device, const std::vector<Vertex>& vertices, const std::vector<UINT>& indices)
+	void UMesh::CreateMesh(ID3D11Device* Device, const std::vector<Vertex>& Vertices, const std::vector<UINT>& Indices)
 	{
-		D3D11_BUFFER_DESC vertexbufferdesc = {};
-		vertexbufferdesc.ByteWidth = static_cast<UINT>(VertexCount * Stride);
-		vertexbufferdesc.Usage = D3D11_USAGE_IMMUTABLE;
-		vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexbufferdesc.CPUAccessFlags = 0;
-		vertexbufferdesc.MiscFlags = 0;
-		vertexbufferdesc.StructureByteStride = 0;
+		D3D11_BUFFER_DESC VertexBufferDesc = {};
+		VertexBufferDesc.ByteWidth = static_cast<UINT>(VertexCount * Stride);
+		VertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		VertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		VertexBufferDesc.CPUAccessFlags = 0;
+		VertexBufferDesc.MiscFlags = 0;
+		VertexBufferDesc.StructureByteStride = 0;
 
-		D3D11_SUBRESOURCE_DATA vertexbufferSRD = { vertices.data() };
+		D3D11_SUBRESOURCE_DATA VertexBufferSRD = { Vertices.data() };
 
-		device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, VertexBuffer.GetAddressOf());
+		Device->CreateBuffer(&VertexBufferDesc, &VertexBufferSRD, VertexBuffer.GetAddressOf());
 
-		D3D11_BUFFER_DESC indexbufferdesc = {};
-		indexbufferdesc.ByteWidth = static_cast<UINT>(IndexCount * sizeof(UINT));
-		indexbufferdesc.Usage = D3D11_USAGE_IMMUTABLE;
-		indexbufferdesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexbufferdesc.CPUAccessFlags = 0;
-		indexbufferdesc.MiscFlags = 0;
-		indexbufferdesc.StructureByteStride = 0;
+		D3D11_BUFFER_DESC IndexBufferDesc = {};
+		IndexBufferDesc.ByteWidth = static_cast<UINT>(IndexCount * sizeof(UINT));
+		IndexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		IndexBufferDesc.CPUAccessFlags = 0;
+		IndexBufferDesc.MiscFlags = 0;
+		IndexBufferDesc.StructureByteStride = 0;
 
-		D3D11_SUBRESOURCE_DATA indexbufferSRD = { indices.data() };
+		D3D11_SUBRESOURCE_DATA IndexBufferSRD = { Indices.data() };
 
-		device->CreateBuffer(&indexbufferdesc, &indexbufferSRD, IndexBuffer.GetAddressOf());
+		Device->CreateBuffer(&IndexBufferDesc, &IndexBufferSRD, IndexBuffer.GetAddressOf());
 	}
 
 } // namespace dxd

@@ -3,11 +3,11 @@
 namespace dxd
 {
 
-	UComponentImpl::UComponentImpl(UObject* Object) : Object(Object) {}
+	UComponentImpl::UComponentImpl(UGameObject* GameObject) : GameObject(GameObject) {}
 
-	UObject* UComponentImpl::GetObject() const
+	UGameObject* UComponentImpl::GetGameObject() const
 	{
-		return Object;
+		return GameObject;
 	}
 
 } // namespace dxd

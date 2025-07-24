@@ -1,4 +1,5 @@
 #include "dxd.h"
+#include "utils.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
@@ -33,8 +34,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     auto mesh = std::make_shared<dxd::UMesh>(Device, vertices, indices);
 
-    dxd::UGameObject object;
-    object.AddComponent<dxd::UMeshRendererComponent>(mesh, shader);
+    std::vector<dxd::UGameObject> objects;
+    for (int i = 0; i < 100; ++i)
+    {
+        dxd::UGameObject object;
+		object.AddComponent<dxd::UMeshRendererComponent>(mesh, shader);
+        float x = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
+        float y = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
+        float z = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
+        float scale = utils::RandomGenerator::GetInstance().GetDouble(0.1, 0.3);
+		object.GetComponent<dxd::UTransformComponent>()->SetPosition({ x, y, z });
+		object.GetComponent<dxd::UTransformComponent>()->SetScale({ scale, scale, scale });
+
+        objects.push_back(std::move(object));
+    }
 
     bool bIsExit = false;
     while (bIsExit == false)
@@ -51,12 +64,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 break;
             }
         }
-        Renderer.Prepare();
+	    Renderer.Prepare();
 
-        dxd::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
-        VSConstantBufferData.World = object.GetComponent<dxd::UTransformComponent>()->GetWorldMatrix();
-        dxd::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
-        object.GetComponent<dxd::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
+        for (auto& object : objects)
+        {
+			dxd::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
+			VSConstantBufferData.World = object.GetComponent<dxd::UTransformComponent>()->GetWorldMatrix();
+			dxd::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
+			object.GetComponent<dxd::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
+        }
 
         Renderer.Render();
     }
