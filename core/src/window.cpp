@@ -1,12 +1,12 @@
 #include "dxd/window.h"
 
-namespace dxd
+namespace DXD
 {
 
 	HINSTANCE UWindow::UWindowClass::GetInstance()
 	{
 		static UWindow::UWindowClass WindowClass;
-		return WindowClass.hInstance;
+		return WindowClass.HInstance;
 	}
 
 	const std::wstring& UWindow::UWindowClass::GetWindowClassName()
@@ -19,23 +19,21 @@ namespace dxd
 		UnregisterClassW(GetWindowClassName().c_str(), GetInstance());
 	}
 
-	UWindow::UWindowClass::UWindowClass() : hInstance(GetModuleHandle(nullptr))
+	UWindow::UWindowClass::UWindowClass() : HInstance(GetModuleHandle(nullptr))
 	{
-		// TODO: EX or None EX
-		// TODO: EX or EXW
-		WNDCLASSEXW WndClass = {};
-		WndClass.cbSize = sizeof(WNDCLASSEXW);
-		WndClass.style = CS_OWNDC;
-		WndClass.lpfnWndProc = WndProcSetup;
-		WndClass.cbClsExtra = 0;
-		WndClass.cbWndExtra = 0;
-		WndClass.hInstance = hInstance;
-		WndClass.hIcon = nullptr;
-		WndClass.hCursor = nullptr;
+		WNDCLASSEXW WndClass   = {};
+		WndClass.cbSize		   = sizeof(WNDCLASSEXW);
+		WndClass.style		   = CS_OWNDC;
+		WndClass.lpfnWndProc   = WndProcSetup;
+		WndClass.cbClsExtra	   = 0;
+		WndClass.cbWndExtra	   = 0;
+		WndClass.hInstance	   = HInstance;
+		WndClass.hIcon		   = nullptr;
+		WndClass.hCursor	   = nullptr;
 		WndClass.hbrBackground = nullptr;
-		WndClass.lpszMenuName = nullptr;
+		WndClass.lpszMenuName  = nullptr;
 		WndClass.lpszClassName = GetWindowClassName().c_str();
-		WndClass.hIconSm = nullptr;
+		WndClass.hIconSm	   = nullptr;
 
 		RegisterClassExW(&WndClass);
 	}
@@ -49,8 +47,6 @@ namespace dxd
 
 	UWindow::UWindow(int Width, int Height, const std::wstring& WindowName)
 	{
-		// TODO: EX or None EX
-		// TODO: EX or EXW (Macro implictily expands to W version)
 		HWindow = CreateWindowW(
 			UWindowClass::GetWindowClassName().c_str(), WindowName.c_str(),
 			WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
@@ -99,4 +95,4 @@ namespace dxd
 		return DefWindowProc(hWindow, message, wParam, lParam);
 	}
 
-} // namespace dxd
+} // namespace DXD

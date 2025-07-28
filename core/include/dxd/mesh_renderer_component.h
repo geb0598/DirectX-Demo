@@ -1,32 +1,36 @@
 #pragma once
 
-#include "component.h"
-#include "mesh.h"
-#include "object.h"
-#include "shader.h"
+#include "dxd/mesh.h"
+#include "dxd/shader.h"
+#include "dxd/buffer.h"
 
-namespace dxd
+#include "dxd/component.h"
+
+namespace DXD
 {
-	class UMeshRendererComponent : public UComponentImpl
+
+	class UMeshRendererComponent : public UComponent
 	{
 	public:
 		~UMeshRendererComponent() = default;
 
-		UMeshRendererComponent(const UMeshRendererComponent&) = delete;
-		UMeshRendererComponent(UMeshRendererComponent&&) noexcept = default;
+		UMeshRendererComponent(UGameObject* GameObject, std::shared_ptr<IMesh> Mesh, 
+			std::shared_ptr<IShader> VertexShader, std::shared_ptr<IShader> PixelShader);
 
+		UMeshRendererComponent(const UMeshRendererComponent&) = delete;
 		UMeshRendererComponent& operator=(const UMeshRendererComponent&) = delete;
+
+		UMeshRendererComponent(UMeshRendererComponent&&) noexcept = default;
 		UMeshRendererComponent& operator=(UMeshRendererComponent&&) noexcept = default;
 
-		UMeshRendererComponent(UGameObject* GameObject, std::shared_ptr<UMesh> Mesh, std::shared_ptr<UShader> Shader);
-
 		void Render(ID3D11DeviceContext* DeviceContext,
-			const VS_CONSTANT_BUFFER_DATA& VSConstantBufferData,
-			const PS_CONSTANT_BUFFER_DATA& PSConstantBufferData);
+			std::vector<std::unique_ptr<IBufferDataWrapper>> VSConstantBuffers,
+			std::vector<std::unique_ptr<IBufferDataWrapper>> PSConstantBuffers);
 
 	private:
-		std::shared_ptr<UMesh> Mesh;
-		std::shared_ptr<UShader> Shader;
+		std::shared_ptr<IMesh> Mesh;
+		std::shared_ptr<IShader> VertexShader;
+		std::shared_ptr<IShader> PixelShader;
 	};
 
-} // namespace dxd
+} // namespace DXD

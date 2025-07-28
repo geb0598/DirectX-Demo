@@ -4,7 +4,7 @@
 
 #include <Windows.h>
 
-namespace dxd
+namespace DXD
 {
 
 	class UWindow
@@ -15,9 +15,9 @@ namespace dxd
 		UWindow(int Width, int Height, const std::wstring& WindowName);
 
 		UWindow(const UWindow&) = delete;
-		UWindow(UWindow&&) noexcept = default;
-
 		UWindow& operator=(const UWindow&) = delete;
+
+		UWindow(UWindow&&) noexcept = default;
 		UWindow& operator=(UWindow&&) noexcept = default;
 
 		HWND GetHWindow();
@@ -32,25 +32,25 @@ namespace dxd
 			~UWindowClass();
 
 			UWindowClass(const UWindowClass&) = delete;
-			UWindowClass(UWindowClass&&) = delete;
-
 			UWindowClass& operator=(const UWindowClass&) = delete;
+
+			UWindowClass(UWindowClass&&) = delete;
 			UWindowClass& operator=(UWindowClass&&) = delete;
 
 		private:
-			// TODO: Should I use std::string for coherent usage or std::wstring for compatibility?
 			static const std::wstring WindowClassName;
 
 			UWindowClass();
 
-			HINSTANCE hInstance;
+			HINSTANCE HInstance;
 		};
 
 		static LRESULT CALLBACK WndProcSetup(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
-		LRESULT WndProcImpl(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam); // TODO: CALLBACK specifier required?
+		 // TODO: CALLBACK specifier required?
+		LRESULT WndProcImpl(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 
 		HWND HWindow;
 	};
 
-} // namespace dxd
+} // namespace DXD

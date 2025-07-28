@@ -1,6 +1,12 @@
-#include "dxd/renderer.h"
+#include <d3d11.h>
+#include <d3dcompiler.h>
 
-namespace dxd
+#include <wrl.h>
+
+#include "dxd/renderer.h"
+#include "dxd/log.h"
+
+namespace DXD
 {
 
 	URenderer& URenderer::GetInstance(HWND HWindow)
@@ -21,12 +27,15 @@ namespace dxd
 	void URenderer::Prepare()
 	{
 		DeviceContext->ClearRenderTargetView(FrameBufferRTV.Get(), ClearColor);
+		DeviceContext->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 		DeviceContext->RSSetViewports(1, &ViewportInfo);
 		DeviceContext->RSSetState(RasterizerState.Get());
 
-		DeviceContext->OMSetRenderTargets(1, FrameBufferRTV.GetAddressOf(), nullptr);
+		// DeviceContext->OMSetRenderTargets(1, FrameBufferRTV.GetAddressOf(), nullptr);
+		DeviceContext->OMSetRenderTargets(1, FrameBufferRTV.GetAddressOf(), DepthStencilView.Get());
 		DeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+		DeviceContext->OMSetDepthStencilState(DepthStencilState.Get(), 1);
 	}
 
 	void URenderer::Render()
@@ -60,17 +69,18 @@ namespace dxd
 
 	void URenderer::CreateDeviceAndSwapChain(HWND HWindow)
 	{
-		D3D_FEATURE_LEVEL FeatureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+		D3D_FEATURE_LEVEL FeatureLevels[]  = { D3D_FEATURE_LEVEL_11_0 };
 		DXGI_SWAP_CHAIN_DESC SwapChainDesc = {};
-		SwapChainDesc.BufferDesc.Width = 0;
-		SwapChainDesc.BufferDesc.Height = 0;
-		SwapChainDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-		SwapChainDesc.SampleDesc.Count = 1;
-		SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		SwapChainDesc.BufferCount = 2;
-		SwapChainDesc.OutputWindow = HWindow;
-		SwapChainDesc.Windowed = TRUE;
-		SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		SwapChainDesc.BufferDesc.Width	   = 0;
+		SwapChainDesc.BufferDesc.Height    = 0;
+		SwapChainDesc.BufferDesc.Format	   = DXGI_FORMAT_B8G8R8A8_UNORM;
+		SwapChainDesc.SampleDesc.Count	   = 1;
+		SwapChainDesc.SampleDesc.Quality   = 0;
+		SwapChainDesc.BufferUsage		   = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		SwapChainDesc.BufferCount		   = 2;
+		SwapChainDesc.OutputWindow		   = HWindow;
+		SwapChainDesc.Windowed			   = TRUE;
+		SwapChainDesc.SwapEffect		   = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
 			D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_DEBUG,
@@ -79,8 +89,38 @@ namespace dxd
 
 		SwapChain->GetDesc(&SwapChainDesc);
 
-		ViewportInfo
-			= { 0.0f, 0.0f, (float)SwapChainDesc.BufferDesc.Width, (float)SwapChainDesc.BufferDesc.Height, 0.0f, 1.0f };
+		ViewportInfo.TopLeftX = 0.0f;
+		ViewportInfo.TopLeftY = 0.0f;
+		ViewportInfo.Width	  = (float)SwapChainDesc.BufferDesc.Width;
+		ViewportInfo.Height   = (float)SwapChainDesc.BufferDesc.Height;
+		ViewportInfo.MinDepth = 0.0f;
+		ViewportInfo.MaxDepth = 1.0f;
+
+		//------------------ Create Depth Stencil Buffer ------------------//
+		D3D11_TEXTURE2D_DESC DepthStencilDesc = {};
+		DepthStencilDesc.Width				  = SwapChainDesc.BufferDesc.Width;
+		DepthStencilDesc.Height				  = SwapChainDesc.BufferDesc.Height;
+		DepthStencilDesc.MipLevels			  = 1;
+		DepthStencilDesc.ArraySize			  = 1;
+		DepthStencilDesc.Format				  = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		DepthStencilDesc.SampleDesc.Count	  = 1;
+		DepthStencilDesc.SampleDesc.Quality	  = 0;
+		DepthStencilDesc.Usage				  = D3D11_USAGE_DEFAULT;
+		DepthStencilDesc.BindFlags			  = D3D11_BIND_DEPTH_STENCIL;
+		DepthStencilDesc.CPUAccessFlags		  = 0;
+		DepthStencilDesc.MiscFlags			  = 0;
+
+		Device->CreateTexture2D(&DepthStencilDesc, nullptr, DepthStencilBuffer.GetAddressOf());
+
+		Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, DepthStencilView.GetAddressOf());
+
+		D3D11_DEPTH_STENCIL_DESC DepthStencilStateDesc = {};
+		DepthStencilStateDesc.DepthEnable    = TRUE;
+		DepthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		DepthStencilStateDesc.DepthFunc		 = D3D11_COMPARISON_LESS;
+		DepthStencilStateDesc.StencilEnable  = FALSE;
+
+		Device->CreateDepthStencilState(&DepthStencilStateDesc, DepthStencilState.GetAddressOf());
 	}
 
 	void URenderer::CreateFrameBuffer()
@@ -103,4 +143,4 @@ namespace dxd
 		Device->CreateRasterizerState(&RasterizerDesc, RasterizerState.GetAddressOf());
 	}
 
-} // namespace dxdj
+} // namespace DXD

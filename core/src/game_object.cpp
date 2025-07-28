@@ -1,6 +1,9 @@
-#include "dxd/object.h"
+#include "dxd/game_object.h"
 
-namespace dxd
+#include "dxd/component.h"
+#include "dxd/transform_component.h"
+
+namespace DXD
 {
 
 	UGameObject::UGameObject() 
@@ -9,4 +12,4 @@ namespace dxd
 		AddComponent<UTransformComponent>();
 	}
 
-} // namespace dxd
+} // namespace DXD

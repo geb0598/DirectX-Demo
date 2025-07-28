@@ -1,4 +1,4 @@
-cbuffer PS_CONSTANT_BUFFER_DATA : register(b1)
+cbuffer PS_CONSTANT_BUFFER_DATA : register(b0)
 {
 	float4 LightPosition;
 };

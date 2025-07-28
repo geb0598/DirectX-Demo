@@ -3,31 +3,29 @@
 #include <filesystem>
 #include <utility>
 #include <vector>
+#include <map>
 
 #include "dxd/vertex.h"
 
-namespace dxd
+namespace DXD
 {
 
-	// NOTE: Interface for further expansion(e.g., factory method pattern, strategy pattern, etc)
-	class IMeshLoader
+	class UObjMeshLoader 
 	{
 	public:
-		virtual ~IMeshLoader() = default;
+		static UObjMeshLoader& GetInstance();
 
-		virtual std::pair<std::vector<FVertex>, std::vector<UINT>> 
-			LoadMesh(const std::filesystem::path& FilePath) const = 0;
-	};
+		virtual ~UObjMeshLoader() = default;
 
-	class OBJMeshLoader : public IMeshLoader
-	{
-	public:
-		virtual ~OBJMeshLoader() = default;
+		UObjMeshLoader(const UObjMeshLoader&) = delete;
+		UObjMeshLoader& operator=(const UObjMeshLoader&) = delete;
 
-		static const OBJMeshLoader& GetInstance();
+		UObjMeshLoader(UObjMeshLoader&&) = delete;
+		UObjMeshLoader& operator=(UObjMeshLoader&&) = delete;
 
-		virtual std::pair<std::vector<FVertex>, std::vector<UINT>> 
-			LoadMesh(const std::filesystem::path& FilePath) const override;
+		template<typename TVertex>
+		std::pair<std::vector<TVertex>, std::vector<UINT>>
+			LoadMesh(const std::filesystem::path& FilePath);
 
 	private:
 		struct FFace
@@ -37,9 +35,16 @@ namespace dxd
 			int TexCoordIndex = -1;
 		};
 
-		FFace ParseFaceBuffer(const std::string& FaceBuffer) const;
+		UObjMeshLoader() = default;
 
-		OBJMeshLoader() = default;
+		void LoadObjMesh(const std::filesystem::path& FilePath);
+
+		FFace ParseFaceBuffer(const std::string& FaceBuffer);
+
+		std::vector<DirectX::XMFLOAT3> Positions;
+		std::vector<DirectX::XMFLOAT3> Normals;
+		std::vector<DirectX::XMFLOAT2> TexCoords;
+		std::vector<FFace> Faces;
 	};
 
-} // namespace dxd
+} // namespace DXD

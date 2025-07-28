@@ -11,17 +11,121 @@
 
 #include "dxd/mesh_loader.h"
 
-namespace dxd
+namespace DXD
 {
 
-	const OBJMeshLoader& OBJMeshLoader::GetInstance()
+	UObjMeshLoader& UObjMeshLoader::GetInstance()
 	{
-		static OBJMeshLoader MeshLoader;
+		static UObjMeshLoader MeshLoader;
 		return MeshLoader;
 	}
 
-	std::pair<std::vector<FVertex>, std::vector<UINT>> 
-		OBJMeshLoader::LoadMesh(const std::filesystem::path& FilePath) const 
+	template<>
+	std::pair<std::vector<FVERTEX_P>, std::vector<UINT>>
+		UObjMeshLoader::LoadMesh<FVERTEX_P>(const std::filesystem::path& FilePath)
+	{
+		LoadObjMesh(FilePath);
+
+		std::vector<FVERTEX_P> Vertices;
+		std::vector<UINT> Indices;
+		std::map<std::tuple<int, int, int>, UINT> IndexMap;
+		for (const auto& Face : Faces)
+		{
+			auto FaceKey = std::make_tuple(Face.PositionIndex, Face.NormalIndex, Face.TexCoordIndex);
+			if (IndexMap.find(FaceKey) != IndexMap.end())
+			{
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+			else
+			{
+				IndexMap[FaceKey] = Vertices.size();
+				FVERTEX_P Vertex;
+				if (Face.PositionIndex != -1)
+				{
+					Vertex.Position = Positions[Face.PositionIndex];
+				}
+				Vertices.push_back(Vertex);
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+		}
+		return { Vertices, Indices };
+	}
+
+	template<>
+	std::pair<std::vector<FVERTEX_PN>, std::vector<UINT>>
+		UObjMeshLoader::LoadMesh<FVERTEX_PN>(const std::filesystem::path& FilePath)
+	{
+		LoadObjMesh(FilePath);
+
+		std::vector<FVERTEX_PN> Vertices;
+		std::vector<UINT> Indices;
+		std::map<std::tuple<int, int, int>, UINT> IndexMap;
+		for (const auto& Face : Faces)
+		{
+			auto FaceKey = std::make_tuple(Face.PositionIndex, Face.NormalIndex, Face.TexCoordIndex);
+			if (IndexMap.find(FaceKey) != IndexMap.end())
+			{
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+			else
+			{
+				IndexMap[FaceKey] = Vertices.size();
+				FVERTEX_PN Vertex;
+				if (Face.PositionIndex != -1)
+				{
+					Vertex.Position = Positions[Face.PositionIndex];
+				}
+				if (Face.NormalIndex != -1)
+				{
+					Vertex.Normal = Normals[Face.NormalIndex];
+				}
+				Vertices.push_back(Vertex);
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+		}
+		return { Vertices, Indices };
+	}
+
+	template<>
+	std::pair<std::vector<FVERTEX_PNT>, std::vector<UINT>>
+		UObjMeshLoader::LoadMesh<FVERTEX_PNT>(const std::filesystem::path& FilePath)
+	{
+		LoadObjMesh(FilePath);
+
+		std::vector<FVERTEX_PNT> Vertices;
+		std::vector<UINT> Indices;
+		std::map<std::tuple<int, int, int>, UINT> IndexMap;
+		for (const auto& Face : Faces)
+		{
+			auto FaceKey = std::make_tuple(Face.PositionIndex, Face.NormalIndex, Face.TexCoordIndex);
+			if (IndexMap.find(FaceKey) != IndexMap.end())
+			{
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+			else
+			{
+				IndexMap[FaceKey] = Vertices.size();
+				FVERTEX_PNT Vertex;
+				if (Face.PositionIndex != -1)
+				{
+					Vertex.Position = Positions[Face.PositionIndex];
+				}
+				if (Face.NormalIndex != -1)
+				{
+					Vertex.Normal = Normals[Face.NormalIndex];
+				}
+				if (Face.TexCoordIndex != -1)
+				{
+					Vertex.TexCoord = TexCoords[Face.TexCoordIndex];
+				}
+				Vertices.push_back(Vertex);
+				Indices.push_back(IndexMap[FaceKey]);
+			}
+		}
+		return { Vertices, Indices };
+	}
+
+	void UObjMeshLoader::LoadObjMesh(const std::filesystem::path& FilePath)
 	{
 		if (!std::filesystem::exists(FilePath))
 		{
@@ -34,10 +138,10 @@ namespace dxd
 			throw std::runtime_error("Failed to open file: " + FilePath.string());
 		}
 
-		std::vector<DirectX::XMFLOAT3> Positions;
-		std::vector<DirectX::XMFLOAT3> Normals;
-		std::vector<DirectX::XMFLOAT2> TexCoords;
-		std::vector<FFace> Faces;
+		Positions.clear();
+		Normals.clear();
+		TexCoords.clear();
+		Faces.clear();
 
 		std::string Line;
 		while (std::getline(File, Line))
@@ -75,42 +179,9 @@ namespace dxd
 				}
 			}
 		}
-
-		std::vector<FVertex> Vertices;
-		std::vector<UINT> Indices;
-		std::map<std::tuple<int, int, int>, int> IndexMap;
-		for (const auto& Face : Faces)
-		{
-			auto FaceKey = std::make_tuple(Face.PositionIndex, Face.NormalIndex, Face.TexCoordIndex);
-			if (IndexMap.find(FaceKey) != IndexMap.end())
-			{
-				Indices.push_back(IndexMap[FaceKey]);
-			}
-			else
-			{
-				IndexMap[FaceKey] = Vertices.size();
-				FVertex Vertex;
-				if (Face.PositionIndex != -1)
-				{
-					Vertex.Position = Positions[Face.PositionIndex];
-				}
-				if (Face.NormalIndex != -1)
-				{
-					Vertex.Normal = Normals[Face.NormalIndex];
-				}
-				if (Face.TexCoordIndex != -1)
-				{
-					Vertex.TexCoord = TexCoords[Face.TexCoordIndex];
-				}
-				Vertices.push_back(Vertex);
-				Indices.push_back(IndexMap[FaceKey]);
-			}
-		}
-
-		return { Vertices, Indices };
 	}
 
-	OBJMeshLoader::FFace OBJMeshLoader::ParseFaceBuffer(const std::string& FaceBuffer) const
+	UObjMeshLoader::FFace UObjMeshLoader::ParseFaceBuffer(const std::string& FaceBuffer)
 	{
 		FFace Face = {};
 		std::istringstream Tokenizer(FaceBuffer);
@@ -122,17 +193,16 @@ namespace dxd
 
 		if (std::getline(Tokenizer, IndexBuffer, '/') && !IndexBuffer.empty())
 		{
-			Face.NormalIndex = std::stoi(IndexBuffer) - 1;
+			Face.TexCoordIndex = std::stoi(IndexBuffer) - 1;
 		}
 
 		if (std::getline(Tokenizer, IndexBuffer, '/') && !IndexBuffer.empty())
 		{
-			Face.TexCoordIndex = std::stoi(IndexBuffer) - 1;
+			Face.NormalIndex = std::stoi(IndexBuffer) - 1;
 		}
 
 		return Face;
 	}
 
 
-
-} // namespace dxd
+} // namespace DXD

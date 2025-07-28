@@ -1,15 +1,11 @@
 #pragma once
 
-#pragma comment(lib, "user32")
-#pragma comment(lib, "d3d11")
-#pragma comment(lib, "d3dcompiler")
-
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
 #include <wrl.h>
 
-namespace dxd
+namespace DXD
 {
 
 	class URenderer
@@ -38,17 +34,21 @@ namespace dxd
 		void CreateFrameBuffer();
 		void CreateRasterizerState();
 
-		Microsoft::WRL::ComPtr<ID3D11Device> Device = nullptr;
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext = nullptr;
-		Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11Device> Device						  = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext		  = nullptr;
+		Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain				  = nullptr;
 
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> FrameBuffer = nullptr;
-		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> FrameBufferRTV = nullptr;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState = nullptr;
-		Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> FrameBuffer				  = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> FrameBufferRTV	  = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState	  = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer				  = nullptr;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> DepthStencilBuffer		  = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView   = nullptr;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState = nullptr;
 
 		FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
 		D3D11_VIEWPORT ViewportInfo;
 	};
 
-} // namespace dxd
+} // namespace DXD

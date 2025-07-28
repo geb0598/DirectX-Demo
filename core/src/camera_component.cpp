@@ -1,13 +1,19 @@
 #include <stdexcept>
 
+#include "dxd/game_object.h"
+#include "dxd/component.h"
 #include "dxd/camera_component.h"
 #include "dxd/transform_component.h"
 
-namespace dxd
+namespace DXD
 {
 
-	UCameraComponent::UCameraComponent(UGameObject* GameObject)
-		: UComponentImpl(GameObject), FovDegrees(60.0f), AspectRatio(16.0f / 9.0f), NearPlane(0.1f), FarPlane(10.0f) {}
+	UCameraComponent::UCameraComponent(UGameObject* GameObject, FCameraComponentDesc CameraComponentDesc)
+		: UComponent(GameObject), 
+		  FovDegrees(CameraComponentDesc.FovDegree), 
+		  AspectRatio(CameraComponentDesc.AspectRatio), 
+		  NearPlane(CameraComponentDesc.NearPlane), 
+		  FarPlane(CameraComponentDesc.FarPlane) {}
 
 	void UCameraComponent::SetFovDegrees(float FovDegrees)
 	{
@@ -54,8 +60,7 @@ namespace dxd
 		auto Transform = GetGameObject()->GetComponent<UTransformComponent>();
 		if (Transform == nullptr)
 		{
-			// TODO: return Unit Matrix?
-			throw std::runtime_error("TODO");
+			throw std::runtime_error("Cannot find Transform component");
 		}
 		
 		DirectX::XMFLOAT3 Position = Transform->GetPosition();
@@ -81,4 +86,4 @@ namespace dxd
 		return DirectX::XMMatrixPerspectiveFovLH(FovRadians, AspectRatio, NearPlane, FarPlane);
 	}
 
-} // namespace dxd
+} // namespace DXD

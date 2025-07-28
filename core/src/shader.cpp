@@ -1,102 +1,159 @@
-#include "dxd/shader.h"
+#include <filesystem>
+#include <map>
+#include <string>
+#include <vector>
 
-namespace dxd
+#include <d3d11.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+
+#include <wrl.h>
+
+#include "dxd/shader.h"
+#include "dxd/log.h"
+
+namespace DXD
 {
 
-	UShader::UShader(ID3D11Device* Device, const SHADER_DESC& shaderdesc)
+	UShaderReflector::UShaderReflector(ID3D11Device* Device, ID3DBlob* ShaderBlob)
 	{
-		CreateShader(Device, shaderdesc.vsFilePath, shaderdesc.psFilePath, shaderdesc.layout);
+		ReflectShader(Device, ShaderBlob);
 	}
 
-	void UShader::UpdateVSConstants(ID3D11DeviceContext* deviceContext, const VS_CONSTANT_BUFFER_DATA& constantBufferData)
+	ID3D11Buffer* UShaderReflector::GetConstantBuffer(const std::string& BufferName) const
 	{
-		deviceContext->UpdateSubresource(vsConstantBuffer.Get(), 0, nullptr, &constantBufferData, 0, 0);
+		auto Iterator = ConstantBufferMap.find(BufferName);
+		if (Iterator == ConstantBufferMap.end())
+		{
+			throw std::invalid_argument("Failed to find constant buffer: " + BufferName);
+		}
+		return Iterator->second.Get();
 	}
+
+	ID3D11Buffer** UShaderReflector::GetAddressOfConstantBuffer(const std::string& BufferName) 
+	{
+		auto Iterator = ConstantBufferMap.find(BufferName);
+		if (Iterator == ConstantBufferMap.end())
+		{
+			throw std::invalid_argument("Failed to find constant buffer: " + BufferName);
+		}
+		return Iterator->second.GetAddressOf();
+	}
+
+	UINT UShaderReflector::GetConstantBufferBindPoint(const std::string& BufferName) const
+	{
+		auto Iterator = ConstantBufferInfoMap.find(BufferName);
+		if (Iterator == ConstantBufferInfoMap.end())
+		{
+			throw std::invalid_argument("Failed to find constant buffer info: " + BufferName);
+		}
+		return Iterator->second.BindPoint;
+	}
+
+	void UShaderReflector::ReflectShader(ID3D11Device* Device, ID3DBlob* ShaderBlob)
+	{
+		Microsoft::WRL::ComPtr<ID3D11ShaderReflection> ShaderReflector;
+		D3DReflect(ShaderBlob->GetBufferPointer(), ShaderBlob->GetBufferSize(), 
+			IID_ID3D11ShaderReflection, reinterpret_cast<void**>(ShaderReflector.GetAddressOf()));
 		
-	void UShader::UpdatePSConstants(ID3D11DeviceContext* deviceContext, const PS_CONSTANT_BUFFER_DATA& constantBufferData)
-	{
-		deviceContext->UpdateSubresource(psConstantBuffer.Get(), 0, nullptr, &constantBufferData, 0, 0);
+		D3D11_SHADER_DESC ShaderDesc;
+		ShaderReflector->GetDesc(&ShaderDesc);
+
+		for (UINT i = 0; i < ShaderDesc.ConstantBuffers; ++i)
+		{
+			ID3D11ShaderReflectionConstantBuffer* ConstantBufferReflector 
+				= ShaderReflector->GetConstantBufferByIndex(i);
+
+			D3D11_SHADER_BUFFER_DESC ConstantBufferDesc;
+			ConstantBufferReflector->GetDesc(&ConstantBufferDesc);
+
+			D3D11_SHADER_INPUT_BIND_DESC ConstantBufferInputBindDesc;
+			ShaderReflector->GetResourceBindingDescByName(ConstantBufferDesc.Name, &ConstantBufferInputBindDesc);
+
+			ConstantBufferInfoMap[ConstantBufferDesc.Name] = { ConstantBufferDesc.Size, ConstantBufferInputBindDesc.BindPoint };
+
+			D3D11_BUFFER_DESC BufferDesc = {};
+			BufferDesc.ByteWidth		   = ConstantBufferDesc.Size;
+			BufferDesc.Usage			   = D3D11_USAGE_DEFAULT;
+			BufferDesc.BindFlags		   = D3D11_BIND_CONSTANT_BUFFER;
+			BufferDesc.CPUAccessFlags	   = 0;
+			BufferDesc.MiscFlags		   = 0;
+			BufferDesc.StructureByteStride = 0;
+
+			Microsoft::WRL::ComPtr<ID3D11Buffer> Buffer;
+			Device->CreateBuffer(&BufferDesc, nullptr, Buffer.GetAddressOf());
+
+			ConstantBufferMap[ConstantBufferDesc.Name] = Buffer;
+		}
 	}
 
-	void UShader::Bind(ID3D11DeviceContext* deviceContext)
+	UPixelShader::UPixelShader(ID3D11Device* Device, const std::filesystem::path& FilePath)
 	{
-		deviceContext->IASetInputLayout(InputLayout.Get());
-
-		deviceContext->VSSetShader(VertexShader.Get(), nullptr, 0);
-		deviceContext->VSSetConstantBuffers(0, 1, vsConstantBuffer.GetAddressOf());
-
-		deviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
-		deviceContext->PSSetConstantBuffers(1, 1, psConstantBuffer.GetAddressOf());
-	}
-
-	void UShader::CreateShader(ID3D11Device* device, const std::filesystem::path& vsFilePath, const std::filesystem::path& psFilePath,
-		const std::vector<D3D11_INPUT_ELEMENT_DESC>& layout)	
-	{
-		if (!std::filesystem::exists(vsFilePath))
+		if (!std::filesystem::exists(FilePath))
 		{
-			throw std::invalid_argument("Vertex Shader not exist: " + vsFilePath.string());
-		}
-		if (!std::filesystem::exists(psFilePath))
-		{
-			throw std::invalid_argument("Pixel Shader not exist: " + psFilePath.string());
+			throw std::invalid_argument("File not exist: " + FilePath.string());
 		}
 
-		Microsoft::WRL::ComPtr<ID3DBlob> vsCSO;
-		Microsoft::WRL::ComPtr<ID3DBlob> psCSO;
-		Microsoft::WRL::ComPtr<ID3DBlob> vserrorBlob;
-		Microsoft::WRL::ComPtr<ID3DBlob> pserrorBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> ShaderErrorBlob;
 
-		HRESULT vs_hr = D3DCompileFromFile(vsFilePath.wstring().c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, vsCSO.GetAddressOf(), vserrorBlob.GetAddressOf());
-		if (FAILED(vs_hr))
+		HRESULT HResult = D3DCompileFromFile(FilePath.wstring().c_str(), nullptr, nullptr,
+			"mainPS", "ps_5_0", 0, 0, ShaderBlob.GetAddressOf(), ShaderErrorBlob.GetAddressOf());
+
+		if (FAILED(HResult))
 		{
-			if (vserrorBlob)
+			if (ShaderErrorBlob)
 			{
-				OutputDebugStringA(static_cast<const char*>(vserrorBlob->GetBufferPointer()));
-				throw std::runtime_error("Vertex Shader Compilation Failed: " + std::string(static_cast<const char*>(vserrorBlob->GetBufferPointer())));
+				LOG_FATAL(static_cast<const char*>(ShaderErrorBlob->GetBufferPointer()));
+				throw std::runtime_error("Pixel Shader Compilation Failed: " + std::string(static_cast<const char*>(ShaderErrorBlob->GetBufferPointer())));
 			}
 			else
 			{
-				throw std::runtime_error("Vertex Shader Compilation Failed (No error messages available). HRESULT: " + std::to_string(vs_hr));
+				throw std::runtime_error("Pixel Shader Compilation Failed (No error messages available). HRESULT: " + std::to_string(HResult));
 			}
 		}
-		device->CreateVertexShader(vsCSO->GetBufferPointer(), vsCSO->GetBufferSize(), nullptr, VertexShader.GetAddressOf());
 
-		HRESULT ps_hr = D3DCompileFromFile(psFilePath.wstring().c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, psCSO.GetAddressOf(), pserrorBlob.GetAddressOf());
-		if (FAILED(ps_hr))
-		{
-			if (pserrorBlob)
-			{
-				OutputDebugStringA(static_cast<const char*>(pserrorBlob->GetBufferPointer()));
-				throw std::runtime_error("Pixel Shader Compilation Failed: " + std::string(static_cast<const char*>(pserrorBlob->GetBufferPointer())));
-			}
-			else
-			{
-				throw std::runtime_error("Pixel Shader Compilation Failed (No error messages available). HRESULT: " + std::to_string(ps_hr));
-			}
-		}
-		device->CreatePixelShader(psCSO->GetBufferPointer(), psCSO->GetBufferSize(), nullptr, PixelShader.GetAddressOf());
-
-		device->CreateInputLayout(layout.data(), layout.size(), vsCSO->GetBufferPointer(), vsCSO->GetBufferSize(), InputLayout.GetAddressOf());
-
-		D3D11_BUFFER_DESC vsConstantBufferDesc = {};
-		vsConstantBufferDesc.ByteWidth = sizeof(VS_CONSTANT_BUFFER_DATA);
-		vsConstantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		vsConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		vsConstantBufferDesc.CPUAccessFlags = 0;
-		vsConstantBufferDesc.MiscFlags = 0;
-		vsConstantBufferDesc.StructureByteStride = 0;
-
-		device->CreateBuffer(&vsConstantBufferDesc, nullptr, vsConstantBuffer.GetAddressOf());
-
-		D3D11_BUFFER_DESC psConstantBufferDesc = {};
-		psConstantBufferDesc.ByteWidth = sizeof(PS_CONSTANT_BUFFER_DATA);
-		psConstantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		psConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		psConstantBufferDesc.CPUAccessFlags = 0;
-		psConstantBufferDesc.MiscFlags = 0;
-		psConstantBufferDesc.StructureByteStride = 0;
-
-		device->CreateBuffer(&psConstantBufferDesc, nullptr, psConstantBuffer.GetAddressOf());
+		CreateShader(Device, ShaderBlob.Get());
+		ShaderReflector = std::make_unique<UShaderReflector>(Device, ShaderBlob.Get());
 	}
 
-} // namespace dxd
+	void UPixelShader::UpdateConstantBuffer(
+		ID3D11DeviceContext* DeviceContext, const std::string& BufferName, const void* BufferData) const
+	{
+		// NOTE: If cbuffer named 'BufferName' is not used or not exist, then ignore
+		try
+		{
+			DeviceContext->UpdateSubresource(ShaderReflector->GetConstantBuffer(BufferName), 0, nullptr, BufferData, 0, 0);
+		}
+		catch (const std::invalid_argument& Exception)
+		{
+			LOG_WARN(Exception.what());
+		}
+	}
+
+	void UPixelShader::Bind(ID3D11DeviceContext* DeviceContext, const std::vector<std::string>& BufferNames) const
+	{
+		DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
+
+		// NOTE: If cbuffer named 'BufferName' is not used or not exist, then ignore
+		for (const auto& BufferName : BufferNames)
+		{
+			try
+			{
+				DeviceContext->PSSetConstantBuffers(ShaderReflector->GetConstantBufferBindPoint(BufferName), 1,
+					ShaderReflector->GetAddressOfConstantBuffer(BufferName));
+			}
+			catch (const std::invalid_argument& Exception)
+			{
+				LOG_WARN(Exception.what());
+			}
+		}
+	}
+
+	void UPixelShader::CreateShader(ID3D11Device* Device, ID3DBlob* ShaderBlob)
+	{
+		Device->CreatePixelShader(ShaderBlob->GetBufferPointer(), ShaderBlob->GetBufferSize(),
+			nullptr, PixelShader.GetAddressOf());
+	}
+
+} // namespace DXD

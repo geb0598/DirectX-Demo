@@ -1,40 +1,39 @@
-#include "dxd/mesh_renderer_component.h"
+#include "dxd/component.h"
 #include "dxd/transform_component.h"
+#include "dxd/mesh_renderer_component.h"
 
-namespace dxd
+namespace DXD
 {
 
-	UMeshRendererComponent::UMeshRendererComponent(
-		UGameObject* GameObject, std::shared_ptr<UMesh> Mesh, std::shared_ptr<UShader> Shader)
-		: UComponentImpl(GameObject), Mesh(Mesh), Shader(Shader) {}
+	UMeshRendererComponent::UMeshRendererComponent(UGameObject* GameObject, std::shared_ptr<IMesh> Mesh,
+		std::shared_ptr<IShader> VertexShader, std::shared_ptr<IShader> PixelShader)
+		: UComponent(GameObject), Mesh(Mesh), VertexShader(VertexShader), PixelShader(PixelShader) {}
 
-	void UMeshRendererComponent::Render(
-		ID3D11DeviceContext* DeviceContext, 
-		const VS_CONSTANT_BUFFER_DATA& VSConstantBufferData, 
-		const PS_CONSTANT_BUFFER_DATA& PSConstantBufferData)
+	void UMeshRendererComponent::Render(ID3D11DeviceContext* DeviceContext,
+		std::vector<std::unique_ptr<IBufferDataWrapper>> VSConstantBuffers,
+		std::vector<std::unique_ptr<IBufferDataWrapper>> PSConstantBuffers)
 	{
-		// TODO: get Transform info
-		//		 update constant buffer of shader
-
-		/*
-		auto Transform = GetGameObject()->GetComponent<UTransformComponent>();
-		if (Transform != nullptr)
+		std::vector<std::string> VSBufferNames;
+		for (const auto& VSConstantBuffer : VSConstantBuffers)
 		{
-			VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
-			VSConstantBufferData.World = Transform->GetWorldMatrix();
-			Shader->UpdateVSConstants(DeviceContext, VSConstantBufferData);
+			VertexShader->UpdateConstantBuffer(DeviceContext,
+				VSConstantBuffer->GetBufferDataName(), VSConstantBuffer->GetBufferData());
+			VSBufferNames.push_back(VSConstantBuffer->GetBufferDataName());
 		}
-		*/
+		VertexShader->Bind(DeviceContext, VSBufferNames);
 
-		Shader->UpdateVSConstants(DeviceContext, VSConstantBufferData);
-
-		Shader->UpdatePSConstants(DeviceContext, PSConstantBufferData);
-
-		Shader->Bind(DeviceContext);
+		std::vector<std::string> PSBufferNames;
+		for (const auto& PSConstantBuffer : PSConstantBuffers)
+		{
+			PixelShader->UpdateConstantBuffer(DeviceContext,
+				PSConstantBuffer->GetBufferDataName(), PSConstantBuffer->GetBufferData());
+			PSBufferNames.push_back(PSConstantBuffer->GetBufferDataName());
+		}
+		PixelShader->Bind(DeviceContext, PSBufferNames);
 
 		Mesh->Bind(DeviceContext);
 
 		DeviceContext->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
 	}
 
-} // namespace dxd
+} // namespace DXD

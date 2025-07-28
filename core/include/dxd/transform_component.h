@@ -4,10 +4,10 @@
 
 #include "dxd/component.h"
 
-namespace dxd
+namespace DXD
 {
 
-	class UTransformComponent : public UComponentImpl
+	class UTransformComponent : public UComponent
 	{
 	public:
 		~UTransformComponent() = default;
@@ -25,10 +25,12 @@ namespace dxd
 		void Rotate(const DirectX::XMFLOAT3& RotationAxis, float AngleRadians);
 
 		void SetPosition(const DirectX::XMFLOAT3& Position);
+		void SetPosition(const DirectX::XMFLOAT4& Position);
 		void SetRotation(const DirectX::XMFLOAT4& Rotation);
 		void SetScale(const DirectX::XMFLOAT3& Scale);
 
 		DirectX::XMFLOAT3 GetPosition() const;
+		DirectX::XMFLOAT4 GetPosition4D() const;
 		DirectX::XMFLOAT4 GetRotation() const; 
 		DirectX::XMFLOAT3 GetScale() const;
 
@@ -40,4 +42,4 @@ namespace dxd
 		DirectX::XMFLOAT3 Scale;
 	};
 
-} // namespace dxd
+} // namespace DXD

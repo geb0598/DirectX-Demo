@@ -1,13 +1,18 @@
 #include "dxd/component.h"
 
-namespace dxd
+namespace DXD
 {
 
-	UComponentImpl::UComponentImpl(UGameObject* GameObject) : GameObject(GameObject) {}
+	UComponent::UComponent(UGameObject* GameObject) : GameObject(GameObject) {}
 
-	UGameObject* UComponentImpl::GetGameObject() const
+	UGameObject* UComponent::GetGameObject() 
 	{
 		return GameObject;
 	}
 
-} // namespace dxd
+	const UGameObject* UComponent::GetGameObject() const
+	{
+		return GameObject;
+	}
+
+} // namespace DXD

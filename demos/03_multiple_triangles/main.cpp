@@ -3,9 +3,9 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    dxd::UWindow Window(1024, 1024, L"03 multiple triangles");
+    DXD::UWindow Window(1024, 1024, L"03 multiple triangles");
 
-    auto& Renderer = dxd::URenderer::GetInstance(Window.GetHWindow());
+    auto& Renderer = DXD::URenderer::GetInstance(Window.GetHWindow());
     auto Device = Renderer.GetDevice();
     auto DeviceContext = Renderer.GetDeviceContext();
 
@@ -16,14 +16,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     std::filesystem::path Resources(RESOURCES_PATH);
 
-    dxd::SHADER_DESC ShaderDesc = {};
+    DXD::SHADER_DESC ShaderDesc = {};
     ShaderDesc.vsFilePath = Resources / "vertex.hlsl";
     ShaderDesc.psFilePath = Resources / "pixel.hlsl";
     ShaderDesc.layout = layout;
 
-    auto Shader = std::make_shared<dxd::UShader>(Device, ShaderDesc);
+    auto Shader = std::make_shared<DXD::UShader>(Device, ShaderDesc);
 
-    std::vector<dxd::FVertex> Vertices(3);
+    std::vector<DXD::FVertex> Vertices(3);
     Vertices[0].Position = { -0.5, -0.5, 0 };
     Vertices[1].Position = { 0.5, -0.5, 0 };
     Vertices[2].Position = { 0,    0.5, 0 };
@@ -32,19 +32,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Backface culling apllied to counter-clockwise Vertices unlike OpenGL
     std::vector<UINT> Indices = { 0, 2, 1 };
 
-    auto Mesh = std::make_shared<dxd::UMesh>(Device, Vertices, Indices);
+    auto Mesh = std::make_shared<DXD::UMesh>(Device, Vertices, Indices);
 
-    std::vector<dxd::UGameObject> Objects;
+    std::vector<DXD::UGameObject> Objects;
     for (int i = 0; i < 100; ++i)
     {
-        dxd::UGameObject Object;
-		Object.AddComponent<dxd::UMeshRendererComponent>(Mesh, Shader);
+        DXD::UGameObject Object;
+		Object.AddComponent<DXD::UMeshRendererComponent>(Mesh, Shader);
         float x = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
         float y = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
         float z = utils::RandomGenerator::GetInstance().GetDouble(-1.0, 1.0);
         float scale = utils::RandomGenerator::GetInstance().GetDouble(0.1, 0.3);
-		Object.GetComponent<dxd::UTransformComponent>()->SetPosition({ x, y, z });
-		Object.GetComponent<dxd::UTransformComponent>()->SetScale({ scale, scale, scale });
+		Object.GetComponent<DXD::UTransformComponent>()->SetPosition({ x, y, z });
+		Object.GetComponent<DXD::UTransformComponent>()->SetScale({ scale, scale, scale });
 
         Objects.push_back(std::move(Object));
     }
@@ -68,10 +68,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         for (auto& Object : Objects)
         {
-			dxd::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
-			VSConstantBufferData.World = Object.GetComponent<dxd::UTransformComponent>()->GetWorldMatrix();
-			dxd::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
-			Object.GetComponent<dxd::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
+			DXD::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
+			VSConstantBufferData.World = Object.GetComponent<DXD::UTransformComponent>()->GetWorldMatrix();
+			DXD::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
+			Object.GetComponent<DXD::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
         }
 
         Renderer.Render();

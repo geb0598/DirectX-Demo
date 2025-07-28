@@ -1,8 +1,9 @@
 #pragma once
 
-namespace dxd
+namespace DXD
 {
 
+	// NOTE: Forward declaration of UGameObject class
 	class UGameObject;
 
 	class IComponent
@@ -10,26 +11,28 @@ namespace dxd
 	public:
 		virtual ~IComponent() = default;
 
-		virtual UGameObject* GetGameObject() const = 0;
+		virtual UGameObject* GetGameObject() = 0;
+		virtual const UGameObject* GetGameObject() const = 0;
 	};
 
-	class UComponentImpl : public IComponent
+	class UComponent : public IComponent
 	{
 	public:
-		virtual ~UComponentImpl() = default;
+		virtual ~UComponent() = default;
 
-		UComponentImpl(const UComponentImpl&) = delete;
-		UComponentImpl(UComponentImpl&&) noexcept = default;
+		explicit UComponent(UGameObject* GameObject);
 
-		UComponentImpl& operator=(const UComponentImpl&) = delete;
-		UComponentImpl& operator=(UComponentImpl&&) noexcept = default;
+		UComponent(const UComponent&) = delete;
+		UComponent& operator=(const UComponent&) = delete;
 
-		explicit UComponentImpl(UGameObject* GameObject);
+		UComponent(UComponent&&) noexcept = default;
+		UComponent& operator=(UComponent&&) noexcept = default;
 
-		virtual UGameObject* GetGameObject() const override;
+		virtual UGameObject* GetGameObject() override;
+		virtual const UGameObject* GetGameObject() const override;
 
 	private:
 		UGameObject* GameObject;
 	};
 
-} // namespace dxd
+} // namespace DXD

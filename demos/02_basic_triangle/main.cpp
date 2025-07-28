@@ -2,9 +2,9 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    dxd::UWindow Window(1024, 1024, L"Triangle");
+    DXD::UWindow Window(1024, 1024, L"Triangle");
 
-    auto& Renderer = dxd::URenderer::GetInstance(Window.GetHWindow());
+    auto& Renderer = DXD::URenderer::GetInstance(Window.GetHWindow());
     auto Device = Renderer.GetDevice();
     auto DeviceContext = Renderer.GetDeviceContext();
 
@@ -15,14 +15,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     std::filesystem::path resources(RESOURCES_PATH);
 
-    dxd::SHADER_DESC shaderdesc = {};
+    DXD::SHADER_DESC shaderdesc = {};
     shaderdesc.vsFilePath = resources / "vertex.hlsl";
     shaderdesc.psFilePath = resources / "pixel.hlsl";
     shaderdesc.layout = layout;
 
-    auto shader = std::make_shared<dxd::UShader>(Device, shaderdesc);
+    auto shader = std::make_shared<DXD::UShader>(Device, shaderdesc);
 
-    std::vector<dxd::FVertex> vertices(3);
+    std::vector<DXD::FVertex> vertices(3);
     vertices[0].Position = { -0.5, -0.5, 0 };
     vertices[1].Position = { 0.5, -0.5, 0 };
     vertices[2].Position = { 0,    0.5, 0 };
@@ -31,10 +31,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Backface culling apllied to counter-clockwise vertices unlike OpenGL
     std::vector<UINT> indices = { 0, 2, 1 };
 
-    auto mesh = std::make_shared<dxd::UMesh>(Device, vertices, indices);
+    auto mesh = std::make_shared<DXD::UMesh>(Device, vertices, indices);
 
-    dxd::UGameObject object;
-    object.AddComponent<dxd::UMeshRendererComponent>(mesh, shader);
+    DXD::UGameObject object;
+    object.AddComponent<DXD::UMeshRendererComponent>(mesh, shader);
 
     bool bIsExit = false;
     while (bIsExit == false)
@@ -53,10 +53,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         Renderer.Prepare();
 
-        dxd::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
-        VSConstantBufferData.World = object.GetComponent<dxd::UTransformComponent>()->GetWorldMatrix();
-        dxd::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
-        object.GetComponent<dxd::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
+        DXD::VS_CONSTANT_BUFFER_DATA VSConstantBufferData = {};
+        VSConstantBufferData.World = object.GetComponent<DXD::UTransformComponent>()->GetWorldMatrix();
+        DXD::PS_CONSTANT_BUFFER_DATA PSConstantBufferData = {};
+        object.GetComponent<DXD::UMeshRendererComponent>()->Render(DeviceContext, VSConstantBufferData, PSConstantBufferData);
 
         Renderer.Render();
     }
