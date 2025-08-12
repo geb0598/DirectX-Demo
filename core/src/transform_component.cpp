@@ -17,6 +17,18 @@ namespace DXD
 		DirectX::XMStoreFloat3(&Position, NewPositionVector);
 	}
 
+	void UTransformComponent::TranslateLocal(const DirectX::XMFLOAT3& DeltaPosition)
+	{
+		DirectX::XMVECTOR LocalDeltaVector 	 = DirectX::XMLoadFloat3(&DeltaPosition);
+		DirectX::XMVECTOR RotationQuaternion = DirectX::XMLoadFloat4(&Rotation);
+		DirectX::XMVECTOR WorldDeltaVector 	 = DirectX::XMVector3Rotate(LocalDeltaVector, RotationQuaternion);
+
+		DirectX::XMVECTOR PositionVector 	= DirectX::XMLoadFloat3(&Position);
+		DirectX::XMVECTOR NewPositionVector = DirectX::XMVectorAdd(PositionVector, WorldDeltaVector);
+
+		DirectX::XMStoreFloat3(&Position, NewPositionVector);
+	}
+
 	void UTransformComponent::Rotate(const DirectX::XMFLOAT4& Quaternion)
 	{
 		DirectX::XMVECTOR RotationVector	= DirectX::XMLoadFloat4(&Rotation);
@@ -34,6 +46,33 @@ namespace DXD
 		DirectX::XMVECTOR NewRotationVector  = DirectX::XMQuaternionMultiply(RotationVector, QuaternionVector);
 
 		DirectX::XMStoreFloat4(&Rotation, NewRotationVector);
+	}
+
+	void UTransformComponent::Rotate(float Pitch, float Yaw, float Roll)
+	{
+		DirectX::XMVECTOR CurrentRotationQuaternion = DirectX::XMLoadFloat4(&Rotation);
+
+		DirectX::XMVECTOR PitchQuaternion = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), Pitch);
+		
+		DirectX::XMVECTOR YawQuaternion = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), Yaw);
+
+		DirectX::XMVECTOR RollQuaternion = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), Roll);
+
+		DirectX::XMVECTOR NewRotationQuaternion = DirectX::XMQuaternionMultiply(YawQuaternion, CurrentRotationQuaternion);
+		NewRotationQuaternion = DirectX::XMQuaternionMultiply(PitchQuaternion, NewRotationQuaternion);
+		NewRotationQuaternion = DirectX::XMQuaternionMultiply(RollQuaternion, NewRotationQuaternion);
+
+		NewRotationQuaternion = DirectX::XMQuaternionNormalize(NewRotationQuaternion);
+		DirectX::XMStoreFloat4(&Rotation, NewRotationQuaternion);
+
+		/*
+		DirectX::XMVECTOR RotationVector = DirectX::XMLoadFloat4(&Rotation);
+		DirectX::XMMATRIX RotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(Pitch, Yaw, Roll);
+		DirectX::XMVECTOR QuaternionVector = DirectX::XMQuaternionRotationMatrix(RotationMatrix);
+		DirectX::XMVECTOR NewRotationVector = DirectX::XMQuaternionMultiply(RotationVector, QuaternionVector);
+
+		DirectX::XMStoreFloat4(&Rotation, NewRotationVector);
+		*/
 	}
 	
 	void UTransformComponent::SetPosition(const DirectX::XMFLOAT3& Position)

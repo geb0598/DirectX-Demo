@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -179,6 +180,39 @@ namespace DXD
 				}
 			}
 		}
+
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(6);
+		ss << "// Generated from " << FilePath.filename() << std::endl;
+		ss << "FVertexSimple vertices[] = {" << std::endl;
+
+		for (const auto& face : Faces)
+		{
+			DirectX::XMFLOAT3 pos = { 0.0f, 0.0f, 0.0f };
+			if (face.PositionIndex >= 0 && face.PositionIndex < Positions.size())
+			{
+				pos = Positions[face.PositionIndex];
+			}
+
+			DirectX::XMFLOAT3 norm = { 0.0f, 0.0f, 0.0f };
+			if (face.NormalIndex >= 0 && face.NormalIndex < Normals.size())
+			{
+				norm = Normals[face.NormalIndex];
+			}
+
+			ss << "    {"
+				<< pos.x << "f, " << pos.y << "f, " << pos.z << "f, "
+				<< norm.x << "f, " << norm.y << "f, " << norm.z << "f, 0.0f"
+				<< "}," << std::endl;
+		}
+
+		ss << "};" << std::endl;
+
+		auto output_path = FilePath;
+		output_path.replace_extension(".h");
+		std::ofstream out_file(output_path);
+		out_file << ss.str();
+		out_file.close();
 	}
 
 	UObjMeshLoader::FFace UObjMeshLoader::ParseFaceBuffer(const std::string& FaceBuffer)

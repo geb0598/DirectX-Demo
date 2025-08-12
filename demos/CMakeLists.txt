@@ -1,6 +1,7 @@
 ADD_SUBDIRECTORY(00_experimental_build)
-# ADD_SUBDIRECTORY(01_basic_window)
+ADD_SUBDIRECTORY(01_basic_window)
 # ADD_SUBDIRECTORY(02_basic_triangle)
 # ADD_SUBDIRECTORY(03_multiple_triangles)
 # ADD_SUBDIRECTORY(04_mesh_loader)
 # ADD_SUBDIRECTORY(05_camera)
+ADD_SUBDIRECTORY(06_gravity_simulation)

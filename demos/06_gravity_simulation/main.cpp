@@ -112,25 +112,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         Renderer.Prepare();
 
         DXD::CB::TRANSFORM_DATA TransformData = {};
-        TransformData.World      = Object.GetComponent<DXD::UTransformComponent>()->GetWorldMatrix();
-        TransformData.View       = Camera.GetComponent<DXD::UCameraComponent>()->GetViewMatrix();
+        TransformData.World = Object.GetComponent<DXD::UTransformComponent>()->GetWorldMatrix();
+        TransformData.View = Camera.GetComponent<DXD::UCameraComponent>()->GetViewMatrix();
         TransformData.Projection = Camera.GetComponent<DXD::UCameraComponent>()->GetProjectionMatrix();
 
         DXD::CB::MATERIAL_DATA MaterialData = {};
-        MaterialData.M_DiffuseColor  = { 1.0f, 0.0f, 0.0f, 1.0f };
+        MaterialData.M_DiffuseColor = { 1.0f, 0.0f, 0.0f, 1.0f };
         MaterialData.M_SpecularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-        MaterialData.M_AmbientColor  = { 0.8f, 0.2f, 0.2f, 1.0f };
-        MaterialData.Shininess       = { 30.0f, 0.0f, 0.0f, 0.0f };
+        MaterialData.M_AmbientColor = { 0.8f, 0.2f, 0.2f, 1.0f };
+        MaterialData.Shininess = { 30.0f, 0.0f, 0.0f, 0.0f };
 
         DXD::CB::LIGHTING_DATA LightingData = {};
-	    LightingData.L_DiffuseColor   = { 1.0f, 1.0f, 1.0f, 1.0f };
-        LightingData.L_SpecularColor  = { 1.0f, 1.0f, 1.0f, 1.0f };
-        LightingData.L_AmbientColor   = { 0.1f, 0.1f, 0.1f, 1.0f };
+        LightingData.L_DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        LightingData.L_SpecularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        LightingData.L_AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
         LightingData.LightingPosition = Lighting.GetComponent<DXD::UTransformComponent>()->GetPosition4D();
-        LightingData.CameraPosition   = Camera.GetComponent<DXD::UTransformComponent>()->GetPosition4D();
+        LightingData.CameraPosition = Camera.GetComponent<DXD::UTransformComponent>()->GetPosition4D();
 
-        Object.GetComponent<DXD::UMeshRendererComponent>()->Render(DeviceContext, 
-            DXD::WrapBufferDataPack(TransformData), 
+        Object.GetComponent<DXD::UMeshRendererComponent>()->Render(DeviceContext,
+            DXD::WrapBufferDataPack(TransformData),
             DXD::WrapBufferDataPack(MaterialData, LightingData));
         //------------------------------- Finish Rendering --------------------------------//
 
@@ -155,7 +155,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
             DirectX::XMFLOAT4 Rotation = CameraTransform->GetRotation();
             ImGui::Text("Rotation(Quaternion): X=%.2f, Y=%.2f, Z=%.2f, W=%.2f", Rotation.x, Rotation.y, Rotation.z, Rotation.w);
-            
+
             ImGui::End();
         }
 

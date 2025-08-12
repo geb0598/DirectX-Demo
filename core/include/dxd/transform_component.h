@@ -21,8 +21,10 @@ namespace DXD
 		UTransformComponent& operator=(UTransformComponent&&) noexcept = default;
 
 		void Translate(const DirectX::XMFLOAT3& DeltaPosition);
+		void TranslateLocal(const DirectX::XMFLOAT3& DeltaPosition);
 		void Rotate(const DirectX::XMFLOAT4& Quaternion);
 		void Rotate(const DirectX::XMFLOAT3& RotationAxis, float AngleRadians);
+		void Rotate(float Pitch, float Yaw, float Roll);
 
 		void SetPosition(const DirectX::XMFLOAT3& Position);
 		void SetPosition(const DirectX::XMFLOAT4& Position);

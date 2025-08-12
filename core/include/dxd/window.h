@@ -4,6 +4,9 @@
 
 #include <Windows.h>
 
+#include "dxd/keyboard.h"
+#include "dxd/mouse.h"
+
 namespace DXD
 {
 
@@ -14,13 +17,16 @@ namespace DXD
 
 		UWindow(int Width, int Height, const std::wstring& WindowName);
 
-		UWindow(const UWindow&) = delete;
+		UWindow(const UWindow&)			   = delete;
 		UWindow& operator=(const UWindow&) = delete;
 
-		UWindow(UWindow&&) noexcept = default;
+		UWindow(UWindow&&) noexcept			   = default;
 		UWindow& operator=(UWindow&&) noexcept = default;
 
 		HWND GetHWindow();
+
+		UKeyboard Keyboard;
+		UMouse Mouse;
 
 	private:
 		class UWindowClass
@@ -31,10 +37,10 @@ namespace DXD
 
 			~UWindowClass();
 
-			UWindowClass(const UWindowClass&) = delete;
+			UWindowClass(const UWindowClass&)			 = delete;
 			UWindowClass& operator=(const UWindowClass&) = delete;
 
-			UWindowClass(UWindowClass&&) = delete;
+			UWindowClass(UWindowClass&&)			= delete;
 			UWindowClass& operator=(UWindowClass&&) = delete;
 
 		private:
@@ -51,6 +57,8 @@ namespace DXD
 		LRESULT WndProcImpl(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 
 		HWND HWindow;
+		int Width;
+		int Height;
 	};
 
 } // namespace DXD

@@ -1,5 +1,9 @@
 #include "dxd/window.h"
 
+#include "imgui/imgui_impl_win32.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace DXD
 {
 
@@ -46,6 +50,7 @@ namespace DXD
 	}
 
 	UWindow::UWindow(int Width, int Height, const std::wstring& WindowName)
+		: Width(Width), Height(Height)
 	{
 		HWindow = CreateWindowW(
 			UWindowClass::GetWindowClassName().c_str(), WindowName.c_str(),
@@ -85,11 +90,101 @@ namespace DXD
 
 	LRESULT UWindow::WndProcImpl(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam)
 	{
+		if (ImGui_ImplWin32_WndProcHandler(hWindow, message, wParam, lParam))
+		{
+			return true;
+		}
+
 		switch (message)
 		{
 		case WM_CLOSE:
 			PostQuitMessage(0);
 			break;
+		case WM_KILLFOCUS:
+			Keyboard.ClearState();
+			break;
+		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
+			if (!(lParam & 0x40000000) || Keyboard.IsAutoRepeatEnabled())
+			{
+				Keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
+			}
+			break;
+		case WM_KEYUP:
+		case WM_SYSKEYUP:
+			Keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
+			break;
+		case WM_CHAR:
+			Keyboard.OnChar(static_cast<unsigned char>(wParam));
+			break;
+		case WM_MOUSEMOVE:
+		{
+			const POINTS Points = MAKEPOINTS(lParam);
+			if (0 <= Points.x && Points.x < Width && 0 <= Points.y && Points.y < Height)
+			{
+				Mouse.OnMouseMove(Points.x, Points.y);
+				if (!Mouse.IsInsideWindow())
+				{
+					SetCapture(HWindow);
+					Mouse.OnMouseEnter();
+				}
+			}
+			else
+			{
+				if (wParam & (MK_LBUTTON | MK_RBUTTON))
+				{
+					Mouse.OnMouseMove(Points.x, Points.y);
+				}
+				else
+				{
+					ReleaseCapture();
+					Mouse.OnMouseLeave();
+				}
+			}
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			SetForegroundWindow(HWindow);
+			const POINTS Points = MAKEPOINTS(lParam);
+			Mouse.OnLeftPressed(Points.x, Points.y);
+			break;	
+		}
+		case WM_LBUTTONUP:
+		{
+			const POINTS Points = MAKEPOINTS(lParam);
+			Mouse.OnLeftReleased(Points.x, Points.y);
+			if (!(0 <= Points.x && Points.x < Width && 0 <= Points.y && Points.y < Height))
+			{
+				ReleaseCapture();
+				Mouse.OnMouseLeave();
+			}		
+			break;
+		}
+		case WM_RBUTTONDOWN:
+		{
+			const POINTS Points = MAKEPOINTS(lParam);
+			Mouse.OnRightPressed(Points.x, Points.y);
+			break;
+		}
+		case WM_RBUTTONUP:
+		{
+			const POINTS Points = MAKEPOINTS(lParam);
+			Mouse.OnRightReleased(Points.x, Points.y);
+			if (!(0 <= Points.x && Points.x < Width && 0 <= Points.y && Points.y < Height))
+			{
+				ReleaseCapture();
+				Mouse.OnMouseLeave();
+			}		
+			break;
+		}
+		case WM_MOUSEWHEEL:
+		{
+			const POINTS Points = MAKEPOINTS(lParam);
+			const int Delta = GET_WHEEL_DELTA_WPARAM(wParam);
+			Mouse.OnWheelDelta(Points.x, Points.y, Delta);
+			break;
+		}
 		}
 
 		return DefWindowProc(hWindow, message, wParam, lParam);
